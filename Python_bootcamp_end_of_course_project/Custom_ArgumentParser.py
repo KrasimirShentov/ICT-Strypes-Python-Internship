@@ -4,6 +4,10 @@ class MyNamespace:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
+    def __iter__(self):
+        for arg_items in self.__dict__.items():
+            yield  arg_items
+
 class Argument:
     def __init__(self, name, **kwargs):
         self.name = name
@@ -51,7 +55,6 @@ class ArgumentParser:
         if args is None:
             args = sys.argv[1:]
 
-        print(args)
         namespace = dict()
         positional_args = []
         
@@ -79,7 +82,6 @@ class ArgumentParser:
             if not is_flag:
                 positional_args.append(token)
 
-        print(positional_args)
         pos_it = iter(positional_args)
         for arg in self.arguments:
             if arg.positional:
