@@ -5,8 +5,8 @@ class MyNamespace:
         self.__dict__.update(kwargs)
 
     def __iter__(self):
-        for arg_items in self.__dict__.items():
-            yield  arg_items
+        for arg_operation, arg_pos in self.__dict__.items():
+            yield  {arg_operation: arg_pos}
 
 class Argument:
     def __init__(self, name, **kwargs):
@@ -18,6 +18,7 @@ class Argument:
         self.default = kwargs.get('default')
         self.required = kwargs.get('required', False)
         self.action = kwargs.get('action', 'store')
+        self.nargs = kwargs.get("nargs", [])
         # self.choices = kwargs.get('choices', None)
 
 class MutuallyExclusiveGroup:
@@ -57,28 +58,47 @@ class ArgumentParser:
 
         namespace = dict()
         positional_args = []
-        
-        it = iter(args)
-        for token in it:
+        i = 0
+
+        while i < len(args):
+            token = args[i]
             is_flag = False
+
             for arg in self.arguments:
                 if not arg.positional and token in arg.flags:
+                    i += 1
                     is_flag = True
                     key = arg.name.lstrip('-').replace('-', '_')
                     
                     if arg.action == 'store_true':
                         namespace[key] = True
+                        i += 1
+
+                    elif arg.nargs == "+":
+                        values = []
+
+                        while i < len(args) and not args[i].startswith("-"):
+                            values.append(arg.type(args[i]))
+                            i += 1
+
+                        if not values:
+                             raise ValueError(f"Argument {token} expects one or more values")
+
+                        namespace[key] = values
+
                     else:
-                        try:
-                            val = next(it)
-                            namespace[key] = arg.type(val)
-                        except StopIteration:
+
+                        if i >= len(args):
                             if arg.default is not None:
                                 namespace[key] = arg.default
                             else:
-                                raise ValueError(f"Missing value for {token}")
+                                raise ValueError(f"Missing value for: {token}")
+                        else:
+                            namespace[key] = arg.type(args[i])
+
                     break
-            
+
+            i += 1
             if not is_flag:
                 positional_args.append(token)
 
