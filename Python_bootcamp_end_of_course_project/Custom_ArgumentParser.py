@@ -56,6 +56,7 @@ class ArgumentParser:
         if args is None:
             args = sys.argv[1:]
 
+        print(args)
         namespace = dict()
         positional_args = []
         i = 0
@@ -63,6 +64,8 @@ class ArgumentParser:
         while i < len(args):
             token = args[i]
             is_flag = False
+
+            print("TOKEN:", args[i], "INDEX:", i)
 
             for arg in self.arguments:
                 if not arg.positional and token in arg.flags:

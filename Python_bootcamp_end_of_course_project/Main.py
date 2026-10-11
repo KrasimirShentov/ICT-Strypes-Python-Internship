@@ -1,12 +1,11 @@
 from Custom_ArgumentParser import ArgumentParser
 from web_scrapper import scrapper
-import sys
 
 WEBSITES = {
     "quotes": {
          "url": "https://quotes.toscrape.com",
-         "page_format": "https://quotes.toscrape.com/page/1/",
-         "number_of_pages": 11,
+         "page_format": "https://quotes.toscrape.com/page/{}/",
+         "number_of_pages": 10,
          "fields":{
              "quote": ".text",
              "author": ".author",
@@ -15,8 +14,8 @@ WEBSITES = {
     },
     "books": {
         "url": "https://books.toscrape.com",
-        "page_format": "https://books.toscrape.com/catalogue/page-1",
-        "number_of_pages": 51,
+        "page_format": "https://books.toscrape.com/catalogue/page-{}.html",
+        "number_of_pages": 50,
         "fields":{
             "book": "h3 a",
             "price": ".price_color",
@@ -39,7 +38,7 @@ def main():
         "--website",
         type=str,
         default="https://books.toscrape.com",
-        help="Choose a website you would like to scrape"
+        help="Choose a website you would like to scrape."
     )
 
     arg_parser.add_argument(
@@ -47,7 +46,14 @@ def main():
         type=str,
         nargs="+",
         default="all",
-        help="User can choose which fields he would like to scrape"
+        help="User can choose which fields he would like to scrape."
+    )
+
+    arg_parser.add_argument(
+        "--pages",
+        type=int,
+        default="all",
+        help="User can choose from how many web pages he want to scrape."
     )
 
     arg_parser.add_argument(
@@ -71,7 +77,9 @@ def main():
         help="Show this helpful message"
     )
 
-    args = arg_parser.parse_args(["--website", "quotes", "--field", "quote"])
+    manual_test = ["--website", "books", "--pages", "2", "--field", "book"]
+    args = arg_parser.parse_args(manual_test)
+    # args = arg_parser.parse_args()
     print(args)
 
     if args.format not in ["json", "csv", "txt"]:
@@ -84,20 +92,37 @@ def main():
     website_fields = WEBSITES[args.website]["fields"]
 
     if args.field == "all":
-        fields = website_fields
+        fields = website_fields.values()
+        print(fields)
     else:
         for field in args.field:
             if field not in website_fields:
                 raise ValueError(f"User must choose between fields that are available for the website")
             
             fields.append(website_fields[field])
+            print(fields)
 
+    if args.pages == "all":
+        pages = WEBSITES[args.website]["number_of_pages"]
+    else:
+        if args.pages > WEBSITES[args.website]["number_of_pages"]:
+            pages = WEBSITES[args.website]["number_of_pages"]
+
+        elif args.pages is not None and WEBSITES[args.website]["number_of_pages"] == None:
+            pages = 1
+
+        else:
+            pages = args.pages
+
+    print(pages)
+    print(WEBSITES[args.website]["number_of_pages"])
+
+    page_url_format = WEBSITES[args.website]["page_format"]
     urls.append(url)
     number_of_pages = WEBSITES[args.website]["number_of_pages"]
     print(number_of_pages)
 
-    for page in range(1, number_of_pages):
-        scrapper(urls, fields, page)
+    scrapper(urls, fields, pages, page_url_format)
     
 if __name__ == "__main__":
     main()
