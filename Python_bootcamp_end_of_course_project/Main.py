@@ -6,6 +6,8 @@ WEBSITES = {
          "url": "https://quotes.toscrape.com",
          "page_format": "https://quotes.toscrape.com/page/{}/",
          "number_of_pages": 10,
+
+         "item_selector": ".quote",
          "fields":{
              "quote": ".text",
              "author": ".author",
@@ -16,6 +18,8 @@ WEBSITES = {
         "url": "https://books.toscrape.com",
         "page_format": "https://books.toscrape.com/catalogue/page-{}.html",
         "number_of_pages": 50,
+
+        "item_selector": "article.product_pod",
         "fields":{
             "book": "h3 a",
             "price": ".price_color",
@@ -27,6 +31,7 @@ WEBSITES = {
 def main():
     urls = []
     fields = []
+    field_names = []
     
     arg_parser = ArgumentParser(
         prog="Web scrapper",
@@ -52,7 +57,7 @@ def main():
     arg_parser.add_argument(
         "--pages",
         type=int,
-        default="all",
+        default=None,
         help="User can choose from how many web pages he want to scrape."
     )
 
@@ -77,9 +82,9 @@ def main():
         help="Show this helpful message"
     )
 
-    manual_test = ["--website", "books", "--pages", "2", "--field", "book"]
-    args = arg_parser.parse_args(manual_test)
-    # args = arg_parser.parse_args()
+    # manual_test = ["--website", "books", "--pages", "2", "--field", "book"]
+    # args = arg_parser.parse_args(manual_test)
+    args = arg_parser.parse_args()
     print(args)
 
     if args.format not in ["json", "csv", "txt"]:
@@ -92,27 +97,26 @@ def main():
     website_fields = WEBSITES[args.website]["fields"]
 
     if args.field == "all":
-        fields = website_fields.values()
+        field_names = list(website_fields.keys())
+        fields = list(website_fields.values())
         print(fields)
     else:
         for field in args.field:
             if field not in website_fields:
                 raise ValueError(f"User must choose between fields that are available for the website")
             
+            field_names.append(field)
             fields.append(website_fields[field])
-            print(fields)
+            print(fields, "\n", field_names)
 
-    if args.pages == "all":
-        pages = WEBSITES[args.website]["number_of_pages"]
+    max_pages = WEBSITES[args.website]["number_of_pages"]
+
+    if args.pages is None:
+        pages = max_pages
+    elif args.pages <= 0:
+        raise ValueError("Pages must be greater than 0")
     else:
-        if args.pages > WEBSITES[args.website]["number_of_pages"]:
-            pages = WEBSITES[args.website]["number_of_pages"]
-
-        elif args.pages is not None and WEBSITES[args.website]["number_of_pages"] == None:
-            pages = 1
-
-        else:
-            pages = args.pages
+        pages = min(args.pages, max_pages)
 
     print(pages)
     print(WEBSITES[args.website]["number_of_pages"])
@@ -121,8 +125,9 @@ def main():
     urls.append(url)
     number_of_pages = WEBSITES[args.website]["number_of_pages"]
     print(number_of_pages)
+    item_selector = WEBSITES[args.website]["item_selector"]
 
-    scrapper(urls, fields, pages, page_url_format)
+    scrapper(fields, field_names, pages, page_url_format, item_selector)
     
 if __name__ == "__main__":
     main()

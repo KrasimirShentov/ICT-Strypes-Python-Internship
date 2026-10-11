@@ -68,8 +68,8 @@ class ArgumentParser:
             print("TOKEN:", args[i], "INDEX:", i)
 
             for arg in self.arguments:
+
                 if not arg.positional and token in arg.flags:
-                    i += 1
                     is_flag = True
                     key = arg.name.lstrip('-').replace('-', '_')
                     
@@ -78,9 +78,11 @@ class ArgumentParser:
                         i += 1
 
                     elif arg.nargs == "+":
+                        i += 1
                         values = []
 
                         while i < len(args) and not args[i].startswith("-"):
+                            print(args[i], f"index {i}")
                             values.append(arg.type(args[i]))
                             i += 1
 
@@ -90,6 +92,7 @@ class ArgumentParser:
                         namespace[key] = values
 
                     else:
+                        i += 1
 
                         if i >= len(args):
                             if arg.default is not None:
@@ -98,12 +101,13 @@ class ArgumentParser:
                                 raise ValueError(f"Missing value for: {token}")
                         else:
                             namespace[key] = arg.type(args[i])
+                            i += 1
 
                     break
 
-            i += 1
             if not is_flag:
                 positional_args.append(token)
+                i += 1
 
         pos_it = iter(positional_args)
         for arg in self.arguments:
