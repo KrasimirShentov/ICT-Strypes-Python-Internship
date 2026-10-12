@@ -1,5 +1,6 @@
 from Custom_ArgumentParser import ArgumentParser
 from web_scrapper import scrapper
+from data_saver import save_data
 
 WEBSITES = {
     "quotes": {
@@ -69,7 +70,7 @@ def main():
     )
 
     arg_parser.add_argument(
-        "--output-dir",
+        "--outputdir",
         type=str,
         default="output",
         help="Choose where scrapped file will be saved"
@@ -127,7 +128,18 @@ def main():
     print(number_of_pages)
     item_selector = WEBSITES[args.website]["item_selector"]
 
-    scrapper(fields, field_names, pages, page_url_format, item_selector)
+    results = scrapper(fields, field_names, 
+                       pages, page_url_format, item_selector)
+
+    file_path = save_data(
+        results,
+        args.format,
+        args.outputdir,
+        args.website
+    )
+
+    if file_path:
+        print("Successful scrapping")
     
 if __name__ == "__main__":
     main()

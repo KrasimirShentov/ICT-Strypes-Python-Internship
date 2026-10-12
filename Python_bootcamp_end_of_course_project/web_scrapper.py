@@ -10,7 +10,7 @@ def scrapper(fields, field_names, page, url_format, item_selector):
         try:
             req = requests.get(page_url)
             req.raise_for_status()
-        except requests.RequestException() as error:
+        except requests.RequestException as error:
             print(f"Failed to scrape {page_url}: {error}")
             continue
 
@@ -27,13 +27,15 @@ def scrapper(fields, field_names, page, url_format, item_selector):
                 element = item.select_one(selector)
 
                 if element is None:
-                    result[element] = None
+                    result[field_name] = None
+
                 elif element.has_attr("title"):
                     result[field_name] = element["title"]
+                    
                 else:
                     result[field_name] = element.get_text(strip=True)
 
             results.append(result)
-            
+
     print(results)
     return results
