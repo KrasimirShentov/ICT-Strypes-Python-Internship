@@ -8,6 +8,12 @@ class MyNamespace:
         for arg_operation, arg_pos in self.__dict__.items():
             yield  {arg_operation: arg_pos}
 
+    def __repr__(self):
+        values = ", ".join(
+            f"{key}={value!r}"
+            for key, value in self.__dict__.items()
+        )
+
 class Argument:
     def __init__(self, name, **kwargs):
         self.name = name
@@ -95,10 +101,13 @@ class ArgumentParser:
                         i += 1
 
                         if i >= len(args):
+                           
                             if arg.default is not None:
                                 namespace[key] = arg.default
+                           
                             else:
                                 raise ValueError(f"Missing value for: {token}")
+                      
                         else:
                             namespace[key] = arg.type(args[i])
                             i += 1
@@ -111,33 +120,45 @@ class ArgumentParser:
 
         pos_it = iter(positional_args)
         for arg in self.arguments:
+           
             if arg.positional:
+               
                 try:
                     namespace[arg.name] = arg.type(next(pos_it))
+                
                 except StopIteration:
+                   
                     if arg.required:
                         raise ValueError(f"Missing required positional argument: {arg.name}")
 
         try:
             extra_element = next(pos_it)
+            
             raise ValueError(f"Unrecognised argument: {extra_element}")
         except StopIteration:
             pass
                                 
         for arg in self.arguments:
             key = arg.name.lstrip('-').replace('-', '_')
+
             if key not in namespace:
-                if arg.default is not None:
-                    namespace[key] = arg.default
-                elif arg.action == 'store_true':
+
+                if arg.action == 'store_true':
                     namespace[key] = False
+
                 elif arg.required and not arg.positional:
                     raise ValueError(f"Argument {arg.flags} is required")
 
+                else: 
+                    namespace[key] = arg.default
+
         for group in self.mutually_exclusive_groups:
+
             chosen = [a for a in group.arguments if namespace.get(a.name.lstrip('-').replace('-', '_'))]
+           
             if len(chosen) > 1:
                 raise ValueError(f"arguments {', '.join(a.flags[-1] for a in chosen)} are mutually exclusive")
+           
             if group.required and not chosen:
                 raise ValueError(f"one of the arguments {', '.join(a.flags[-1] for a in group.arguments)} is required")
         
@@ -149,10 +170,13 @@ class ArgumentParser:
 
     def print_help(self):
         lines = [f"Usage: {self.prog} [options]"]
+        
         if self.description:
+       
             lines.append(self.description)
         for arg in self.arguments:
             flags = ', '.join(arg.flags) if arg.flags else arg.name
+       
             lines.append(f"{flags}\t{arg.help}")
         print('\n'.join(lines))
 

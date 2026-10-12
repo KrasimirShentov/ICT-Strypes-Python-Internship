@@ -1,7 +1,15 @@
 from Custom_ArgumentParser import ArgumentParser
 from web_scrapper import scrapper
 from data_saver import save_page_data
+
 import shlex
+
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich.prompt import Prompt
+
+console = Console()
 
 WEBSITES = {
     "quotes": {
@@ -82,40 +90,163 @@ def create_argument_parser():
     
     return arg_parser
 
-def show_available_sites():
-    print("\nAvailable website")
+def show_header():
+    console.print()
+    console.print(
+        Panel.fit("[bold cyan] Web Scrapper[/bold cyan]\n"
+                  "[dim] Scrape and save website data[/dim]",
+                  border_style="cyan"
+        )
+    )
 
-    for website in WEBSITES:
-        print(f"    - {website}")
+def show_available_sites():
+    table = Table(
+        title="Available Websites",
+        header_style="bold magenta"
+    )
+
+    table.add_column("#", justify="center", style="dim")
+    table.add_column("Website", style="bold cyan")
+    table.add_column("Pages", justify="right")
+    table.add_column("URL", style="dim")
+
+    for number, (name, website) in enumerate(WEBSITES.items(), start=1):
+
+        table.add_row(
+            str(number), 
+            name, 
+            str(website['number_of_pages']), 
+            website["url"]
+        
+        )
+    console.print(table)
 
 def show_available_fields(website):
-    print(f"\nAvaialble fields for {website}")
+    fields = WEBSITES[website]["fields"].keys()
 
-    for field in WEBSITES[website]["fields"]:
-        print(f"    - {field}")
+    console.print(
+        f"\n[bold]Available fields for:"
+        f"[cyan] {website}[/cyan][/bold]"
+    )
 
-    print("     - all")
+    field_text = []
+
+    for field in fields:
+        field_text.append(
+            f"[green]~[/green] {field}"
+        )
+
+    field_text.append(
+        f"[green]~[/green] all"
+    )
+
+    console.print("     ".join(field_text))
 
 def show_available_options():
-    print("\nOther available option")
-    print("  --field <field> [field ...]")
-    print("  --pages <number>")
-    print("  --format json/csv/txt")
-    print("  --outputdir <directory>")
+    table = Table(
+        title="Avaialble Options",
+        header_style="bold blue"
+    )
 
-    print("Examples:")
-    print("  --field book prie | field book")
-    print("  --pages 3")
-    print("  -- format csv")
+    table.add_column(
+        "Option",
+        style="bold cyan"
+    )
 
-    print("You can also combine them")
-    print("  --field book price --pages 3 --format csv")
+    table.add_column(
+        "Description"
+    )
 
-    print("Type 'run' when ready")
-    print("Type 'exit' to exit the program")
+    table.add_column(
+        "Example",
+        style="green"
+    )
 
-def get_selected_Website(command_args):
-    pass
+    table.add_row(
+        "--field",
+        "Choose fields for scrapping",
+        "--field book price"
+    )
+
+    table.add_row(
+        "--pages",
+        "Choose number of pages",
+        "--pages 3"
+    )
+
+    table.add_row(
+        "--format",
+        "json / csv / txt",
+        "--format csv"
+    )
+
+    table.add_row(
+        "outputdir",
+        "Choose output directory",
+        "--outputdir results"
+    )
+
+    console.print()
+    console.print(table)
+
+    console.print(
+        "\n[bold]Commands:[/bold]"
+        "[green]run[/green]"
+        "[cyan]show[/cyan]"
+        "[yellow]reset[/yellow]"
+        "[red]exit[/red]"
+    )
+
+def show_current_config(arg_parser, command_args):
+    try:
+        args = arg_parser.parse_args(command_args)
+
+    except (ValueError, TypeError):
+        return
+
+    table = Table(
+        title="Current configuration",
+        show_header=False,
+        border_style="cyan"
+    )
+
+    table.add_column(
+        "Setting",
+        style="cyan"
+    )
+
+    table.add_column(
+        "Value",
+        style="cyan"
+    )
+
+    table.add_row(
+        "Website",
+        args.website
+    )
+
+    table.add_row(
+        "Fields",
+        ", ".join(args.field)
+    )
+
+    table.add_row(
+        "Pages",
+        args.pages
+    )
+
+    table.add_row(
+        "Format",
+        args.format.upper()
+    )
+
+    table.add_row(
+        "Output directory",
+        args.outputdir
+    )
+
+    console.print()
+    console.print(table)
 
 def scrape_website(args):
     fields = []
@@ -148,13 +279,25 @@ def scrape_website(args):
     max_pages = website["number_of_pages"]
 
     if args.pages is None:
-        pages = max_pages
+        pages = 1
 
     elif args.pages <= 0:
         raise ValueError("Pages must be greater than 0")
     
     else:
         pages = min(args.pages, max_pages)
+
+    console.print()
+
+    console.print(
+        Panel.fit(
+            f"[bold]Scrapping[/bold]"
+            f"[cyan]{args.website}[/cyan]\n"
+            f"Pages: [green]{pages}[/green]\n"
+            f"Fields: [green]{", ".join(field_names)}[/green]",
+            border_style="blue"
+        )
+    )
 
     results = scrapper(fields, field_names, 
                     pages, website["page_format"], website["item_selector"])
@@ -187,56 +330,172 @@ def scrape_website(args):
 
 def print_operation_summary(summary):
     
-    print("Scrapping completed")
+    console.print()
 
-    print(f"Website: {summary["webiste"]}")
-    print(f"Pages scrapped: {summary["pages"]}")
-    print(f"Fields: {", ".join(summary["fields"])}")
-    print(f"Records collected: {summary["records"]}")
-    print(f"Format: {summary["format"]}")
+    console.print(
+        "[bold green] Scrapping completed successfully[/bold green]"
+    )
 
-    if summary["saved_files"]:
-        print("\nFiles:")
+    table = Table(
+        title="Operation summary",
+        show_header=False,
+        border_style="green"
+    )
 
-        for file_path in summary["saved_files"]:
-            print(f"  {file_path}")
+    table.add_column(
+        "Property",
+        style="bold"
+    )
+
+    table.add_column(
+        "Value",
+        style="cyan"    
+    )
+
+    table.add_row(
+        "Website",
+        summary["website"]
+    )
+
+    table.add_row(
+        "Pages scraped",
+        str(summary["pages"])
+    )
+
+    table.add_row(
+        "Fields",
+        ", ".join(summary["fields"])
+    )
+
+    table.add_row(
+        "Records",
+        str(summary["records"])
+    )
+
+    table.add_row(
+        "Format",
+        summary["format"].upper()
+    )
+
+    console.print(table)
 
 def print_session_summary(session_results):
     
+    console.print()
+
     if not session_results:
-        print("No scrapping operations were performed")
+        console.print(
+            "[yellow]No scraping operations were performed[/yellow]"
+        )
         return
+
+    table = Table(
+        title="Session Summary",
+        header_style="bold magenta"
+    )
+
+    table.add_column(
+        "#",
+        justify="center"
+    )
+
+    table.add_column(
+        "Website",
+        style="cyan"
+    )
+
+    table.add_column(
+        "Pages",
+        justify="right"
+    )
+
+    table.add_column(
+        "Records",
+        justify="right"
+    )
+
+    table.add_column(
+        "format"
+    )
 
     total_records = 0
 
     for number, result in enumerate(session_results, start=1):
-
-        print(f"{number}. "
-              f"{result["website"]} | "
-              f"{result["pages"]} | "
-              f"{result["records"]} records | "
-              f"{result["format"]}")
+        table.add_row(
+            str(number),
+            result["website"],
+            str(result["pages"]),
+            str(result["records"]),
+            result["format"].upper()
+        )
 
         total_records += result["records"]
-    print()
 
-    print("Total operations: "
-          f"{len(session_results)}")
+    console.print(table)
 
-    print("Total records collected"
-          f"{total_records}")
+    console.print(
+        f"[bold] total records collected: {total_records}[/bold] "
+    )
+
+def select_website():
+
+    while True:
+        user_input = Prompt.ask(
+            "\n[bold cyan]Choose website [/bold cyan]"
+        )
+
+        command = user_input.lower()
+
+        if command == "exit":
+            return None
+
+        if command in WEBSITES:
+            return command
+
+        else:
+            console.print(
+                "[bold red]Invalid website.[/bold red]"
+                f"Choose: {", ".join(WEBSITES.keys())}"
+            )
+
 
 def interactive_menu(arg_parser):
     session_results = []
 
     while True:
-        command_args = []
+        console.clear()
 
-        print("Web scrapper")
-        print()
-
+        show_header()
         show_available_sites()
-        print("\nChoose a website") 
+
+        console.print(
+            "\n[dim] Choose a website[/dim]"
+        )
+        selected_website = select_website()
+
+        if selected_website is None:
+            print_session_summary(
+                session_results
+            )
+
+            console.print(
+                "\n[bold cyan]Goodbye[/bold cyan]"
+            )
+
+            return
+
+        command_args = [
+            "--website",
+            selected_website
+        ]
+
+        show_available_fields(
+            selected_website
+        )
+
+        show_current_config(
+            arg_parser, command_args
+        )
 
         while True:
             user_input = input("\nscrapper> ".strip())
@@ -244,37 +503,108 @@ def interactive_menu(arg_parser):
             if not user_input:
                 continue
 
-            if user_input.lower() == "exit":
+            command = user_input.lower()
+
+            if command == "exit":
                 print(print_session_summary(session_results))
+
+                console.print(
+                    "\n[bold cyan]Goodbye[/bold cyan]"
+                )
+
                 return
+
+            if command == "run":
+                try:
+                    args = arg_parser.parse_args(
+                        command_args
+                    )
+
+                    summary = scrape_website(args)
+
+                    session_results.append(summary)
+                    print_operation_summary(summary)
+
+                    console.print(
+                        "\n[dim]Press enter to return to website selection[/dim]"
+                    )
+                    input()
+                    break
+
+                except (ValueError, TypeError) as error:
+                    console.print(
+                        f"\n[bold red] Error: [/bold red] {error}"
+                    )
+                    continue
+
+            if command == "show":
+                show_current_config(
+                    arg_parser, command_args
+                )
+
+                continue
+
+            if command == "reset":
+
+                command_args = [
+                    "--website",
+                    selected_website
+                ]
+
+                console.print(
+                    "\n[yellow] Options reset to defaults[/yellow]"
+                )
+
+                show_current_config(
+                    arg_parser, command_args
+                )
+
+                continue
 
             try:
                 new_args = shlex.split(user_input)
 
-                parse_args = arg_parser.parse_args(new_args)
-
             except (ValueError, TypeError) as error:
 
-                print(f"Error: {error}")
+                console.print(f"[bold red]Error: [/bold red]{error}")
                 continue
 
-            if parse_args.website not in WEBSITES:
-                print(f"Website must be one of: {", ".join(WEBSITES.keys())}")
+            if "--website" in new_args:
+                console.print(
+                    "[yellow]A website has already been select[/yellow]"
+                )
+
+                console.print(
+                    "[dim] Finish this operation with 'run' or 'reset'[/dum]"
+                )
                 continue
+
+            # test_args = (
+            #     command_args + new_args
+            # )
+
+            # try:
+            #     parsed_test = arg_parser.parse_args(test_args)
+
+            # except:
+
+            # if parse_args.website not in WEBSITES:
+            #     print(f"Website must be one of: {", ".join(WEBSITES.keys())}")
+            #     continue
 
             command_args.extend(new_args)
 
-            selected_website = (parse_args.website)
-            break
+            # selected_website = (parse_args.website)
+            # break
 
-        show_available_fields(selected_website)
+            show_current_config(arg_parser, command_args)
         show_available_options()
 
         print("Current arguments")
         print(" ".join(command_args))
 
         while True:
-            user_input = input("\nscrapper> ".strip())
+            user_input = input("\nscrapper> ")
 
             if not user_input:
                 continue
@@ -292,6 +622,7 @@ def interactive_menu(arg_parser):
             if command == "run":
                 try:
                     args = arg_parser.parse_args(command_args)
+                    print(vars(args))
                     summary = scrape_website(args)
 
                     session_results.append(summary)
