@@ -2,13 +2,14 @@ import requests
 import bs4
 
 def scrapper(fields, field_names, page, url_format, item_selector):
-    results = []
+    results = dict()
 
     for page_num in range(1, page + 1):
         page_url = url_format.format(page_num)
+        page_results = []
 
         try:
-            req = requests.get(page_url)
+            req = requests.get(page_url, timeout=10)
             req.raise_for_status()
         except requests.RequestException as error:
             print(f"Failed to scrape {page_url}: {error}")
@@ -31,11 +32,13 @@ def scrapper(fields, field_names, page, url_format, item_selector):
 
                 elif element.has_attr("title"):
                     result[field_name] = element["title"]
-                    
+
                 else:
                     result[field_name] = element.get_text(strip=True)
 
-            results.append(result)
+            page_results.append(result)
+            
+        results[page_num] = page_results
 
     print(results)
     return results

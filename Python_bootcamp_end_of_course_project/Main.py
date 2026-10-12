@@ -1,6 +1,6 @@
 from Custom_ArgumentParser import ArgumentParser
 from web_scrapper import scrapper
-from data_saver import save_data
+from data_saver import save_page_data
 
 WEBSITES = {
     "quotes": {
@@ -30,7 +30,6 @@ WEBSITES = {
 }
 
 def main():
-    urls = []
     fields = []
     field_names = []
     
@@ -51,7 +50,7 @@ def main():
         "--field",
         type=str,
         nargs="+",
-        default="all",
+        default=["all"],
         help="User can choose which fields he would like to scrape."
     )
 
@@ -94,13 +93,14 @@ def main():
     if args.website not in WEBSITES.keys():
         raise ValueError(f"You have to choose between one of these website: {WEBSITES.keys()}")
 
-    url = WEBSITES[args.website]["url"]
-    website_fields = WEBSITES[args.website]["fields"]
+    website = WEBSITES[args.website]
 
-    if args.field == "all":
+    website_fields = website["fields"]
+    max_pages = website["number_of_pages"]
+
+    if "all" in args.field:
         field_names = list(website_fields.keys())
         fields = list(website_fields.values())
-        print(fields)
     else:
         for field in args.field:
             if field not in website_fields:
@@ -108,9 +108,6 @@ def main():
             
             field_names.append(field)
             fields.append(website_fields[field])
-            print(fields, "\n", field_names)
-
-    max_pages = WEBSITES[args.website]["number_of_pages"]
 
     if args.pages is None:
         pages = max_pages
@@ -119,27 +116,27 @@ def main():
     else:
         pages = min(args.pages, max_pages)
 
-    print(pages)
-    print(WEBSITES[args.website]["number_of_pages"])
-
-    page_url_format = WEBSITES[args.website]["page_format"]
-    urls.append(url)
-    number_of_pages = WEBSITES[args.website]["number_of_pages"]
-    print(number_of_pages)
-    item_selector = WEBSITES[args.website]["item_selector"]
-
     results = scrapper(fields, field_names, 
-                       pages, page_url_format, item_selector)
+                       pages, website["page_format"], website["item_selector"])
 
-    file_path = save_data(
-        results,
-        args.format,
-        args.outputdir,
-        args.website
-    )
+    for page_num, page_data in results.items():
+        save_page_data(
+            page_data,
+            args.format,
+            args.outputdir,
+            args.website,
+            page_num,
+            field_names
+        )
 
-    if file_path:
-        print("Successful scrapping")
+    # if file_path:
+    #     print("Successful scrapping")
+    #     print(f"Website: {args.website}")
+    #     print(f"Pages scrapped: {pages}")
+    #     print(f"Fields: {", ".join(field_names)}")
+    #     print(f"Results collected: {len(results)}")
+    #     print(f"File format: {args.format}")
+    #     print(f"Saved to: {file_path}")
     
 if __name__ == "__main__":
     main()
