@@ -56,6 +56,8 @@ class ArgumentParser:
         
         self.arguments.append(arg)
 
+        return arg
+
     def add_mutually_exclusive_group(self, required=False):
         group = MutuallyExclusiveGroup(self, required)
         self.mutually_exclusive_groups.append(group)
@@ -99,17 +101,12 @@ class ArgumentParser:
                     else:
                         i += 1
 
-                        if i >= len(args):
-                           
-                            if arg.default is not None:
-                                namespace[key] = arg.default
-                           
-                            else:
-                                raise ValueError(f"Missing value for: {token}")
+                        if i >= len(args):    
+                            raise ValueError(f"Missing value for: {token}")
                       
-                        else:
-                            namespace[key] = arg.type(args[i])
-                            i += 1
+                        namespace[key] = arg.type(args[i])
+                        
+                        i += 1
 
                     break
 

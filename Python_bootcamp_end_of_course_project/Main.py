@@ -180,7 +180,7 @@ def show_available_options():
     )
 
     table.add_row(
-        "outputdir",
+        "--outputdir",
         "Choose output directory",
         "--outputdir results"
     )
@@ -189,11 +189,11 @@ def show_available_options():
     console.print(table)
 
     console.print(
-        "\n[bold]Commands:[/bold]"
-        "[green]run[/green]"
-        "[cyan]show[/cyan]"
-        "[yellow]reset[/yellow]"
-        "[red]exit[/red]"
+        "\n[bold]Commands:[/bold] "
+        "[green]run[/green] "
+        "[cyan]show[/cyan] "
+        "[yellow]reset[/yellow] "
+        "[red]exit[/red] "
     )
 
 def show_current_config(arg_parser, command_args):
@@ -230,13 +230,13 @@ def show_current_config(arg_parser, command_args):
     )
 
     if args.pages is None:
-        pages_text += "all"
+        pages_text = "1"
     else:
-        pages_Text = str(args.pages)
+        pages_text = str(args.pages)
 
     table.add_row(
         "Pages",
-        pages_Text
+        pages_text
     )
 
     table.add_row(
@@ -295,7 +295,7 @@ def scrape_website(args):
 
     console.print(
         Panel.fit(
-            f"[bold]Scrapping[/bold]"
+            f"[bold]Scrapping[/bold]: "
             f"[cyan]{args.website}[/cyan]\n"
             f"Pages: [green]{pages}[/green]\n"
             f"Fields: [green]{", ".join(field_names)}[/green]",
@@ -318,7 +318,7 @@ def scrape_website(args):
             field_names
         )
 
-        if file_path not in saved_files:
+        if file_path not in saved_files and file_path is not None:
             saved_files.append(file_path)
 
     total_records = sum(len(page_data) for page_data in results.values())
@@ -581,7 +581,7 @@ def interactive_menu(arg_parser):
                 )
 
                 console.print(
-                    "[dim] Finish this operation with 'run' or 'reset'[/dum]"
+                    "[dim] Finish this operation with 'run' or 'reset'[/dim]"
                 )
                 continue
 

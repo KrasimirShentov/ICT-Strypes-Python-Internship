@@ -238,7 +238,7 @@ def save_page_data(data, file_format, output_dir, website, page, field_names):
         print(f"Previously saved fields: {', '.join(old_fields)}")
         print(f"Current fields: {", ".join(field_names)}")
 
-        answer = input("Would you like to replace the stored page with these fields [y/n]: ").lower()
+        answer = input("Would you like to merge these fields with the stored data [y/n]: ").lower()
         
         if answer != "y":
             print("Existing data was not changed")
@@ -280,7 +280,7 @@ def save_page_data(data, file_format, output_dir, website, page, field_names):
             page_directory,
             merged_hash,
             combined_fields,
-            len(data)
+            len(merged_data)
         )
 
         print(f"Page {page} has been updated with the new fields")
@@ -311,7 +311,7 @@ def save_page_data(data, file_format, output_dir, website, page, field_names):
     print(f"\nPage {page} was scrapped before.")
     print("The content of the page has changed")
 
-    answer = input("Would you like to replace the stored page with these fields [y/n]: ").lower()
+    answer = input("Would you like to replace the stored page with the new content [y/n]: ").lower()
 
     if answer != "y":
         print("Existing data was not changed")
