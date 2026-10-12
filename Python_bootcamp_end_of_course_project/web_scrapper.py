@@ -18,6 +18,7 @@ def scrapper(fields, field_names, page, url_format, item_selector):
  
         try:
             req = requests.get(page_url, timeout=10)
+            req.encoding = "utf-8"
             req.raise_for_status()
         except requests.RequestException as error:
             print(f"Failed to scrape {page_url}: {error}")

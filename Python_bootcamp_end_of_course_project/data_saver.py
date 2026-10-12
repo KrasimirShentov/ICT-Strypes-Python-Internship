@@ -135,18 +135,21 @@ def save_json(data, file_path):
 def save_csv(data, file_path, field_names):
 
     with open(file_path, "w", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(file, fieldnames=field_names, restval="None")
+        writer = csv.DictWriter(
+            file,
+            fieldnames=field_names,
+            restval="None"
+        )
+
         writer.writeheader()
 
         for item in data:
             cleaned_item = {
-                key: (
-                    "None" if value is None else value
-                )
+                key: ("None" if value is None else value)
                 for key, value in item.items()
             }
 
-        writer.writerows(cleaned_item)
+            writer.writerow(cleaned_item)
 
 def save_txt(data, file_path):
     with open(file_path, "w", encoding="utf-8") as file:
