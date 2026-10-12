@@ -2,7 +2,7 @@ import json, os, csv
 from datetime import datetime
 import hashlib
 
-FORMATS = ["JSON", "CSV", "TXT"]
+FORMATS = ["json", "csv", "txt"]
 
 def get_data_hash(data):
     normalized_data = json.dumps(
@@ -164,19 +164,19 @@ def rewrite_existing_formats(data, page_directory, website, page, requested_form
 
         if os.path.exists(file_path):
             formats_to_rewrite.append(file_format)
+    
+    if requested_format not in formats_to_rewrite:
+        formats_to_rewrite.append(requested_format)
 
-        if requested_format not in formats_to_rewrite:
-            formats_to_rewrite.append(requested_format)
-
-        for file_format in formats_to_rewrite:
-            save_format(
-                data,
-                file_format,
-                page_directory,
-                website,
-                page,
-                field_names
-            )
+    for file_format in formats_to_rewrite:
+        save_format(
+            data,
+            file_format,
+            page_directory,
+            website,
+            page,
+            field_names
+        )
 
 def save_page_data(data, file_format, output_dir, website, page, field_names):
     if not data:
@@ -225,7 +225,7 @@ def save_page_data(data, file_format, output_dir, website, page, field_names):
 
         return file_path
 
-    old_hash = metadata.get("content_hash")
+    old_hash = metadata.get("hash_content")
     old_fields = metadata.get("fields", [])
     old_data = read_stored_data(page_directory)
 
