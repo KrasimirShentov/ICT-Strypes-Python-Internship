@@ -5,6 +5,14 @@ import hashlib
 FORMATS = ["json", "csv", "txt"]
 
 def get_data_hash(data):
+    """
+    Generate a SHA256 hash for the scraped data.
+
+    The data is first serialized into a normalized JSON string
+    with sorted keys to ensure that identical content always
+    produces the same hash.
+    """
+
     normalized_data = json.dumps(
         data, sort_keys=True, ensure_ascii=False
     )
@@ -95,6 +103,14 @@ def write_stored_data(page_directory, data):
         )
 
 def merge_data(old_data, new_data):
+    """
+    Merge two datasets record by record.
+
+    Records are merged by their index position. If the number
+    of records differs between datasets, merging is considered
+    unsafe and None is returned.
+    """
+
     if len(old_data) != len(new_data):
         return None
 
@@ -119,9 +135,18 @@ def save_json(data, file_path):
 def save_csv(data, file_path, field_names):
 
     with open(file_path, "w", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(file, fieldnames=field_names)
+        writer = csv.DictWriter(file, fieldnames=field_names, restval="None")
         writer.writeheader()
-        writer.writerows(data)
+
+        for item in data:
+            cleaned_item = {
+                key: (
+                    "None" if value is None else value
+                )
+                for key, value in item.items()
+            }
+
+        writer.writerows(cleaned_item)
 
 def save_txt(data, file_path):
     with open(file_path, "w", encoding="utf-8") as file:
@@ -179,6 +204,20 @@ def rewrite_existing_formats(data, page_directory, website, page, requested_form
         )
 
 def save_page_data(data, file_format, output_dir, website, page, field_names):
+    """
+    Save scraped page data while tracking changes.
+
+    The function compares newly scraped data against previously
+    stored content using hashes and metadata.
+
+    Behaviors:
+        - Saves new pages.
+        - Detects unchanged content.
+        - Creates missing output formats.
+        - Merges newly requested fields.
+        - Updates stored data when content changes.
+    """
+
     if not data:
         print(f"Page {page} doesnt contain any data")
 

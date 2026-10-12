@@ -36,9 +36,37 @@ WEBSITES = {
             "instock": ".instock.availability"
         }
     },
+    "hockey": {
+        "url": "https://www.scrapethissite.com/pages/forms/",
+        "page_format": "https://www.scrapethissite.com/pages/forms/?page_num={}",
+        "number_of_pages": 24,
+
+        "item_selector": "tr.team",
+
+        "fields": {
+            "team": "td.name",
+            "year": "td.year",
+            "wins": "td.wins",
+            "losses": "td.losses",
+            "win_percent": "td.pct",
+            "ot-losses": "td.ot-losses",
+            "goals_for": "td.gf",
+            "goals_agains": "td.ga",
+            "goal_difference": "td.diff"
+        }
+    }
 }
 
 def create_argument_parser():
+    """
+    Create and configure the application's argument parser.
+
+    Returns:
+        ArgumentParser:
+            Configured parser containing all supported
+            scraping options.
+    """
+
     arg_parser = ArgumentParser(
         prog="Web scrapper",
         description="The user can choose between which website he wants to scrape.\n" \
@@ -253,6 +281,19 @@ def show_current_config(arg_parser, command_args):
     console.print(table)
 
 def scrape_website(args):
+    """
+    Validate user options and perform a scraping operation.
+
+    Selected fields are collected from the chosen website,
+    saved to disk, and summarized for display.
+
+    Args:
+        args (MyNamespace): Parsed command-line arguments.
+
+    Returns:
+        dict: Summary information about the scraping operation.
+    """
+
     fields = []
     field_names = []
 
@@ -333,7 +374,13 @@ def scrape_website(args):
     }
 
 def print_operation_summary(summary):
-    
+    """
+    Display a summary of a completed scraping operation.
+
+    Args:
+        summary (dict): Result returned by scrape_website().
+    """
+
     console.print()
 
     console.print(
@@ -384,7 +431,14 @@ def print_operation_summary(summary):
     console.print(table)
 
 def print_session_summary(session_results):
-    
+    """
+    Display a summary of all scraping operations executed
+    during the current application session.
+
+    Args:
+        session_results (list[dict]): Completed operation summaries.
+    """
+
     console.print()
 
     if not session_results:
@@ -464,6 +518,22 @@ def select_website():
 
 
 def interactive_menu(arg_parser):
+    """
+    Start the interactive command-line interface.
+
+    Users can:
+        - Select a website
+        - Configure scraping options
+        - Run scraping operations
+        - View configuration settings
+        - Reset options
+        - Exit the application
+
+    Args:
+        arg_parser (ArgumentParser):
+            Configured argument parser instance.
+    """
+
     session_results = []
 
     while True:
@@ -622,8 +692,15 @@ def interactive_menu(arg_parser):
             show_current_config(arg_parser, command_args)
             
 def main():
-   arg_parser = create_argument_parser()
-   interactive_menu(arg_parser)
+    """
+    Application entry point.
+
+    Creates the argument parser and launches the
+    interactive scraping interface.
+    """
+
+    arg_parser = create_argument_parser()
+    interactive_menu(arg_parser)
    
 if __name__ == "__main__":
     main()

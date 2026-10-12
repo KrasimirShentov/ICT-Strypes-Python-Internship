@@ -2,12 +2,20 @@ import requests
 import bs4
 
 def scrapper(fields, field_names, page, url_format, item_selector):
+    """
+    Scrape one or more pages from a website.
+
+    For each page, matching items are selected using the provided
+    item selector. Requested fields are extracted from every item
+    and grouped by page number.
+    """
+    
     results = dict()
 
     for page_num in range(1, page + 1):
         page_url = url_format.format(page_num)
         page_results = []
-
+ 
         try:
             req = requests.get(page_url, timeout=10)
             req.raise_for_status()
@@ -32,7 +40,13 @@ def scrapper(fields, field_names, page, url_format, item_selector):
                     result[field_name] = element["title"]
 
                 else:
-                    result[field_name] = element.get_text(strip=True)
+                    text = element.get_text(strip=True)
+
+                    if text:
+                        result[field_name] = text
+                    else:
+                        result[field_name] = None
+
 
             page_results.append(result)
 

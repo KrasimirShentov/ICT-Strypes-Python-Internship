@@ -1,6 +1,13 @@
 import sys
 
 class MyNamespace:
+    """
+    Container object for parsed command-line arguments.
+
+    Behaves similarly to argparse.Namespace by storing
+    parsed argument values as object attributes.
+    """
+        
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
@@ -17,6 +24,13 @@ class MyNamespace:
         return f"MyNamespace: ({values})"
 
 class Argument:
+    """
+    Represents a command-line argument definition.
+
+    Stores information such as names, type conversion,
+    default values, actions, and positional status.
+    """
+    
     def __init__(self, name, **kwargs):
         self.name = name
         self.flags = kwargs.get('flags', [])
@@ -29,6 +43,11 @@ class Argument:
         self.nargs = kwargs.get("nargs", [])
 
 class MutuallyExclusiveGroup:
+    """
+    Represents a group of arguments where only one
+    argument may be selected at a time.
+    """
+    
     def __init__(self, parser, required=False):
         self.parser = parser
         self.required = required
@@ -42,6 +61,19 @@ class MutuallyExclusiveGroup:
         return arg
 
 class ArgumentParser:
+    """
+    Lightweight implementation of Python's argparse module.
+
+    Supports:
+        - Positional arguments
+        - Optional arguments
+        - Type conversion
+        - Store-true flags
+        - nargs='+'
+        - Mutually exclusive groups
+        - Automatic help generation
+    """
+
     def __init__(self, prog=None, description=None):
         self.prog = prog or sys.argv[0]
         self.description = description
@@ -64,6 +96,25 @@ class ArgumentParser:
         return group
 
     def parse_args(self, args=None):
+        """
+        Parse command-line arguments into a namespace object.
+
+        Command-line tokens are matched against registered
+        arguments and converted to their configured types.
+
+        Args:
+            args (list[str] | None):
+                Tokens to parse. If None, sys.argv[1:] is used.
+
+        Returns:
+            MyNamespace: Parsed argument values.
+
+        Raises:
+            ValueError:
+                If required arguments are missing, values are invalid,
+                or mutually exclusive constraints are violated.
+        """
+        
         if args is None:
             args = sys.argv[1:]
 
