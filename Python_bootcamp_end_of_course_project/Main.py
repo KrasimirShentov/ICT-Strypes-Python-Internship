@@ -51,7 +51,7 @@ WEBSITES = {
             "win_percent": "td.pct",
             "ot-losses": "td.ot-losses",
             "goals_for": "td.gf",
-            "goals_agains": "td.ga",
+            "goals_against": "td.ga",
             "goal_difference": "td.diff"
         }
     }
