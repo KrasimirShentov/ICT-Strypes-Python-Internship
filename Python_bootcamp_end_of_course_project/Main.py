@@ -83,7 +83,6 @@ def create_argument_parser():
 
     arg_parser.add_argument(
         "-h", "--help",
-        type=str,
         action="store_true",
         help="Show this helpful message"
     )
@@ -230,9 +229,14 @@ def show_current_config(arg_parser, command_args):
         ", ".join(args.field)
     )
 
+    if args.pages is None:
+        pages_text += "all"
+    else:
+        pages_Text = str(args.pages)
+
     table.add_row(
         "Pages",
-        args.pages
+        pages_Text
     )
 
     table.add_row(
@@ -493,6 +497,8 @@ def interactive_menu(arg_parser):
             selected_website
         )
 
+        show_available_options()
+
         show_current_config(
             arg_parser, command_args
         )
@@ -506,7 +512,7 @@ def interactive_menu(arg_parser):
             command = user_input.lower()
 
             if command == "exit":
-                print(print_session_summary(session_results))
+                print_session_summary(session_results)
 
                 console.print(
                     "\n[bold cyan]Goodbye[/bold cyan]"
@@ -579,91 +585,41 @@ def interactive_menu(arg_parser):
                 )
                 continue
 
-            # test_args = (
-            #     command_args + new_args
-            # )
-
-            # try:
-            #     parsed_test = arg_parser.parse_args(test_args)
-
-            # except:
-
-            # if parse_args.website not in WEBSITES:
-            #     print(f"Website must be one of: {", ".join(WEBSITES.keys())}")
-            #     continue
-
-            command_args.extend(new_args)
-
-            # selected_website = (parse_args.website)
-            # break
-
-            show_current_config(arg_parser, command_args)
-        show_available_options()
-
-        print("Current arguments")
-        print(" ".join(command_args))
-
-        while True:
-            user_input = input("\nscrapper> ")
-
-            if not user_input:
-                continue
-
-            if user_input.lower() == "exit":
-                print(print_session_summary(session_results))
-                return
-
-            command = user_input.lower()
-
-            if command == "exit":
-                print_session_summary(session_results)
-                return
-
-            if command == "run":
-                try:
-                    args = arg_parser.parse_args(command_args)
-                    print(vars(args))
-                    summary = scrape_website(args)
-
-                    session_results.append(summary)
-                    
-                    print_operation_summary(summary)
-    
-                    break
-
-                except (ValueError, TypeError) as error:
-                    print(f"Error: {error}")
-                    continue
+            test_args = command_args + new_args
 
             try:
-                new_args = shlex.split(user_input)
-
-            except ValueError as error:
-                print(f"Invalid input: {error}")
-                continue
-
-            if "--website" in new_args:
-                
-                print("A website has already been selected")
-                print("Finish the operation with 'run'")
-            
-                continue
-
-            test_args = (command_args + new_args)
-
-            try:
-                arg_parser.parse_args(
+                parsed_test = arg_parser.parse_args(
                     test_args
                 )
+
+                if parsed_test.format not in ["json", "csv", "txt"]:
+                    raise ValueError("--format must be json, csv, txt")
+
+                if parsed_test.pages is not None and parsed_test.pages <= 0:
+                    raise ValueError("--pages must be greater than 0")
+
+                available_fields = WEBSITES[selected_website]["fields"]
+
+                if "all" not in parsed_test.field:
+
+                    for field in parsed_test.field:
+
+                        if field not in available_fields:
+                            raise ValueError(
+                                f"Invalid field '{field}'\n"
+                                f"Available fields: {", ".join(available_fields.keys())}"
+                            )
+
             except (ValueError, TypeError) as error:
-                print(f"Error: {error}")
+                console.print(
+                    f"[bold red]Error: [/bold red] {error}"
+                )
                 continue
 
-            command_args.extend(new_args)
+            command_args = test_args
+            console.print("[green]Options updated[/green]")
 
-            print(f"Current args: {" ".join(command_args)}")
-
-            
+            show_current_config(arg_parser, command_args)
             
 def main():
    arg_parser = create_argument_parser()

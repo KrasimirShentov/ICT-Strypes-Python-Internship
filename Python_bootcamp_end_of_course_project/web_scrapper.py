@@ -21,9 +21,7 @@ def scrapper(fields, field_names, page, url_format, item_selector):
         for item in items:
             result = dict()
 
-            for i in range(len(fields)):
-                selector = fields[i]
-                field_name = field_names[i]
+            for selector, field_name in zip(fields, field_names):
 
                 element = item.select_one(selector)
 
@@ -37,8 +35,7 @@ def scrapper(fields, field_names, page, url_format, item_selector):
                     result[field_name] = element.get_text(strip=True)
 
             page_results.append(result)
-            
+
         results[page_num] = page_results
 
-    print(results)
     return results

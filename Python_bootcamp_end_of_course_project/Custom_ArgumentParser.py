@@ -14,6 +14,8 @@ class MyNamespace:
             for key, value in self.__dict__.items()
         )
 
+        return f"MyNamespace: ({values})"
+
 class Argument:
     def __init__(self, name, **kwargs):
         self.name = name
@@ -25,7 +27,6 @@ class Argument:
         self.required = kwargs.get('required', False)
         self.action = kwargs.get('action', 'store')
         self.nargs = kwargs.get("nargs", [])
-        # self.choices = kwargs.get('choices', None)
 
 class MutuallyExclusiveGroup:
     def __init__(self, parser, required=False):
@@ -49,8 +50,10 @@ class ArgumentParser:
 
     def add_argument(self, *names, **kwargs):
         positional = not any(n.startswith('-') for n in names)
+
         arg = Argument(name=names[-1], flags=names,
                        positional=positional, **kwargs)
+        
         self.arguments.append(arg)
 
     def add_mutually_exclusive_group(self, required=False):
@@ -62,7 +65,6 @@ class ArgumentParser:
         if args is None:
             args = sys.argv[1:]
 
-        print(args)
         namespace = dict()
         positional_args = []
         i = 0
@@ -70,8 +72,6 @@ class ArgumentParser:
         while i < len(args):
             token = args[i]
             is_flag = False
-
-            print("TOKEN:", args[i], "INDEX:", i)
 
             for arg in self.arguments:
 
@@ -88,7 +88,6 @@ class ArgumentParser:
                         values = []
 
                         while i < len(args) and not args[i].startswith("-"):
-                            print(args[i], f"index {i}")
                             values.append(arg.type(args[i]))
                             i += 1
 

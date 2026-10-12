@@ -310,3 +310,34 @@ def save_page_data(data, file_format, output_dir, website, page, field_names):
 
     print(f"\nPage {page} was scrapped before.")
     print("The content of the page has changed")
+
+    answer = input("Would you like to replace the stored page with these fields [y/n]: ").lower()
+
+    if answer != "y":
+        print("Existing data was not changed")
+        return None
+
+    rewrite_existing_formats(
+        data,
+        page_directory,
+        website,
+        page,
+        file_format,
+        field_names
+    )
+
+    write_stored_data(
+        page_directory,
+        data
+    )
+
+    write_meta_data(
+        page_directory,
+        new_hash,
+        field_names,
+        len(data)
+    )
+
+    print(f"Page {page} was updated with the new content")
+
+    return requested_file
